@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Notification Shade Alpha Settings</string>
+    <string name="selectScrim">Select ScrimView to change its transparency</string>
+    <string name="maxBlur">Maximum blur value for system</string>
+    <string name="maxBlurWarning">It may look unpleasant</string>
+    <string name="alphaValue">Set alpha value</string>
+    <string name="activateWarning">Module is not activated or LSPosed is not running properly. Changes may not be saved. See https://github.com/LSPosed/LSPosed/discussions/1079 for more info.</string>
+</resources>

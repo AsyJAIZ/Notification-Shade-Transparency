@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:screenOrientation="portrait"
+    android:fitsSystemWindows="true"
+    android:id="@+id/MainActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="@string/app_name" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/maxBlur"
+        style="@style/Widget.Material3.Slider"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/maxBlur"
+        android:stepSize="1"
+        android:valueFrom="0"
+        android:valueTo="23"
+        app:layout_constraintBottom_toTopOf="@+id/selScrim"
+        app:layout_constraintEnd_toStartOf="@+id/maxBlurValue"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/appBarLayout" />
+
+    <EditText
+        android:id="@+id/maxBlurValue"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="5dp"
+        android:ems="3"
+        android:hint="23"
+        android:inputType="numberDecimal|numberSigned"
+        app:layout_constraintBottom_toTopOf="@+id/selScrim"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/maxBlur"
+        app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/selScrim"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:hint="@string/selectScrim"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/maxBlur">
+
+        <AutoCompleteTextView
+            android:id="@+id/selector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/alphaValue"
+        style="@style/Widget.Material3.Slider"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_weight="1"
+        android:contentDescription="@string/alphaValue"
+        android:stepSize="0.05"
+        android:valueFrom="0"
+        android:valueTo="1"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/selScrim" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
