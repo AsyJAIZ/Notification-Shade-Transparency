@@ -1,12 +1,9 @@
 package com.asyjaiz.A12blur;
 
-import static com.asyjaiz.A12blur.MainActivity.maxBlurDefault;
 import static com.asyjaiz.A12blur.MainActivity.scrimList;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
-import android.content.res.XResources;
 import android.os.Build;
-import android.util.TypedValue;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -16,7 +13,6 @@ import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
-import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
@@ -40,6 +36,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
     public void apply(XC_MethodHook.MethodHookParam param, Class<?> findClass) throws Throwable {
         done.clear();
         for (String scrim : scrimList) {
+            //XposedBridge.log(scrim + " " + param.args[1] + " " + param.args[2]);
             if (!XposedHelpers.findField(findClass, scrim).get(param.thisObject).equals(param.args[0]))
                 continue;
 
@@ -47,8 +44,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
                 continue;
 
             //param.args[1] = (Float) param.args[1] * (Float) entry.getValue();
-            param.args[1] = prefs.getFloat(scrim, 1.0f);
-            //XposedBridge.log(scrim + " " + param.args[1]);
+            param.args[1] = (Float) param.args[1] * prefs.getFloat(scrim, 1.0f);
             param.args[2] = -16777216;
             done.add(scrim);
         }
@@ -77,7 +73,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         }
 
         //XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
-        resparam.res.setReplacement(pkg, "dimen", "max_window_blur_radius", new XResources.DimensionReplacement(prefs.getFloat("max_window_blur_radius", maxBlurDefault), TypedValue.COMPLEX_UNIT_PX));
+        //resparam.res.setReplacement(pkg, "dimen", "max_window_blur_radius", new XResources.DimensionReplacement(prefs.getFloat("max_window_blur_radius", maxBlurDefault), TypedValue.COMPLEX_UNIT_PX));
     }
 
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {

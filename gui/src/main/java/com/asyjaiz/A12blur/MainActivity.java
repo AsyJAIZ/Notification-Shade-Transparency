@@ -26,7 +26,7 @@ import com.google.android.material.textfield.TextInputLayout;
 public class MainActivity extends AppCompatActivity {
 
     AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
-    public static final String[] scrimList = {"mScrimBehind", "mNotificationsScrim", "mScrimInFront", "mScrimForBubble"};
+    public static final String[] scrimList = {"mScrimBehind", "mNotificationsScrim", "mScrimInFront"}; // , "mScrimForBubble"};
     public static final Float maxBlurDefault = 23f;
     SharedPreferences prefs;
 
