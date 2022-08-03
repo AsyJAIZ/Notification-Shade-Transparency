@@ -1,82 +1,63 @@
 package com.asyjaiz.A12blur;
 
+import static de.robv.android.xposed.XposedHelpers.findAndHookConstructor;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+import static de.robv.android.xposed.XposedHelpers.setFloatField;
 
-import android.content.res.XModuleResources;
 import android.os.Build;
-import android.view.View;
 
-import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
-import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
-public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageResources, IXposedHookZygoteInit {
-
-//public class Replace implements IXposedHookLoadPackage {
+public class Replace implements IXposedHookLoadPackage {
     String pkg = "com.android.systemui";
-    private final boolean tint = true;
-    private String MODULE_PATH;
+    private final boolean tint = true; // I do not recommend disabling tint, text will become unreadable
+    private boolean supportsBlur = false;
+    private boolean rehook = false;
 
     public boolean versionCheck() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
-    }
-
-    @Override
-    public void initZygote(IXposedHookZygoteInit.StartupParam startupParam) throws Throwable {
-        MODULE_PATH = startupParam.modulePath;
-        //XResources.setSystemWideReplacement("com.android.internal", "bool", "config_avoidGfxAccel", true);
-    }
-
-    @Override
-    public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resparam) throws Throwable {
-        if (!resparam.packageName.equals(pkg) || !versionCheck())
-            return;
-
-        XModuleResources modRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
-        //posedBridge.log("yass intremal;");
-        //resparam.res.setReplacement("com.android.internal", "bool", "config_avoidGfxAccel", true);
-        resparam.res.setReplacement(pkg, "dimen", "max_window_blur_radius", modRes.fwd(R.dimen.max_window_blur_radius));
     }
 
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         if (!lpparam.packageName.equals(pkg) || !versionCheck())
             return;
 
-        final Class<?> findClass = XposedHelpers.findClass(pkg + ".statusbar.phone.ScrimController", lpparam.classLoader);
-        final Class<?> blurClass = XposedHelpers.findClass(pkg + ".statusbar.BlurUtils", lpparam.classLoader);
+        final Class<?> ScrimController = XposedHelpers.findClass(pkg + ".statusbar.phone.ScrimController", lpparam.classLoader);
+        final Class<?> BlurUtils = XposedHelpers.findClass(pkg + ".statusbar.BlurUtils", lpparam.classLoader);
 
-
-        //findAndHookMethod(blurClass, "supportsBlursOnWindows", XC_MethodReplacement.returnConstant(true));
-        final float[] value = {0.0f};
-
-        findAndHookMethod(findClass, "updateScrimColor", View.class, float.class, int.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (!XposedHelpers.findField(findClass, "mNotificationsScrim").get(param.thisObject).equals(param.args[0]))
-                    return;
-
-                if (tint && (value[0] == 0.0f))
-                    return;
-
-                param.args[1] = (Float) param.args[1] * value[0];
-                //param.args[2] = -16777216;
-
-            }
-
+        findAndHookMethod(BlurUtils, "supportsBlursOnWindows", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                //Object eins = XposedHelpers.callStaticMethod(blurClass, "supportsBlursOnWindows");
-                //Object zwei = blurClass.
-                if (tint && (value[0] == 0.0f)) {
-                    if (true) { value[0] = 0.54f; }
-                    else { value[0] = 0.85f; }
-                }
+                super.afterHookedMethod(param);
+                supportsBlur = (boolean) param.getResult();
+                //XposedBridge.log("Supports blur? " + (supportsBlur ? "Yes" : "No"));
             }
         });
+
+        findAndHookConstructor(ScrimController, pkg + ".statusbar.phone.LightBarController",
+                pkg + ".statusbar.phone.DozeParameters",
+                "android.app.AlarmManager",
+                pkg + ".statusbar.policy.KeyguardStateController",
+                pkg + ".util.wakelock.DelayedWakeLock.Builder",
+                "android.os.Handler",
+                "com.android.keyguard.KeyguardUpdateMonitor",
+                pkg + ".dock.DockManager",
+                pkg + ".statusbar.policy.ConfigurationController",
+                "java.util.concurrent.Executor",
+                pkg + ".statusbar.phone.UnlockedScreenOffAnimationController",
+                pkg + ".statusbar.phone.panelstate.PanelExpansionStateManager",
+                new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        float tintF = tint ? (supportsBlur ? 0.54f : 0.85f) : 0f;
+                        setFloatField(param.thisObject, "mDefaultScrimAlpha", tintF);
+                        XposedBridge.log("Tint alpha value: " + tintF);
+                    }
+                });
     }
 }
 
