@@ -26,52 +26,18 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <com.google.android.material.slider.Slider
-        android:id="@+id/maxBlur"
-        style="@style/Widget.Material3.Slider"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        android:layout_weight="1"
-        android:contentDescription="@string/maxBlur"
-        android:stepSize="1"
-        android:valueFrom="0"
-        android:valueTo="23"
-        app:layout_constraintBottom_toTopOf="@+id/selScrim"
-        app:layout_constraintEnd_toStartOf="@+id/maxBlurValue"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/appBarLayout" />
-
-    <EditText
-        android:id="@+id/maxBlurValue"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginBottom="5dp"
-        android:ems="3"
-        android:hint="23"
-        android:inputType="numberDecimal|numberSigned"
-        app:layout_constraintBottom_toTopOf="@+id/selScrim"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/maxBlur"
-        app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
-
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/selScrim"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_marginTop="5dp"
         android:layout_marginEnd="5dp"
         android:hint="@string/selectScrim"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/maxBlur">
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout">
 
         <AutoCompleteTextView
             android:id="@+id/selector"

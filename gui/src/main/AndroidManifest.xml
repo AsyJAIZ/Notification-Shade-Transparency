@@ -21,13 +21,13 @@
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="Can change maximum value of blur radius and hide some elements of notification shade" />
+            android:value="Can hide some elements of notification shade background" />
         <meta-data
             android:name="xposedminversion"
             android:value="93" />
         <meta-data
             android:name="xposedscope"
-            android:resource="@array/xposedscope" />
+            android:value="com.android.systemui" />
         <meta-data
             android:name="xposedsharedprefs"
             android:value="true" />

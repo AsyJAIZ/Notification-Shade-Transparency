@@ -44,7 +44,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
                 continue;
 
             //param.args[1] = (Float) param.args[1] * (Float) entry.getValue();
-            param.args[1] = (Float) param.args[1] * prefs.getFloat(scrim, 1.0f);
+            param.args[1] = (Float) prefs.getFloat(scrim, 1.0f);
             param.args[2] = -16777216;
             done.add(scrim);
         }

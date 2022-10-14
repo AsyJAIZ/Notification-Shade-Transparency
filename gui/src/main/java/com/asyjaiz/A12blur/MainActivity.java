@@ -1,8 +1,5 @@
 package com.asyjaiz.A12blur;
 
-import static android.widget.Toast.LENGTH_SHORT;
-
-import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,9 +10,7 @@ import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
 
     AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
     public static final String[] scrimList = {"mScrimBehind", "mNotificationsScrim", "mScrimInFront"}; // , "mScrimForBubble"};
-    public static final Float maxBlurDefault = 23f;
     SharedPreferences prefs;
 
     @Override
@@ -48,9 +42,6 @@ public class MainActivity extends AppCompatActivity {
 
         fadeIn.setDuration(250);
 
-        Slider maxBlur = findViewById(R.id.maxBlur);
-        EditText maxBlurValue = findViewById(R.id.maxBlurValue);
-
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list, scrimList);
         TextInputLayout scrim = findViewById(R.id.selScrim);
         AutoCompleteTextView selector = ((AutoCompleteTextView) scrim.getEditText());
@@ -59,54 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         Slider alphaValue = findViewById(R.id.alphaValue);
 
-        maxBlur.addOnChangeListener((slider, value, fromUser) -> maxBlurValue.setText(String.valueOf(Math.round(value))));
-        maxBlur.setValue(prefs.getFloat("max_window_blur_radius", maxBlurDefault));
-        final boolean[] warn = {false};
-        maxBlurValue.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @SuppressLint("ResourceType")
-            @Override
-            public void afterTextChanged(Editable s) {
-                int value;
-
-                if (s.toString().equals(""))
-                    value = 0;
-                else value = Integer.parseInt(s.toString());
-
-                if (!(prefs.getFloat("max_window_blur_radius", 23f) == (float) value))
-                {
-                    if (value > 23) {
-                        if (!warn[0]) {
-                            maxBlur.setValueTo(150f);
-                            Toast.makeText(MainActivity.this, R.string.maxBlurWarning, LENGTH_SHORT).show();
-                            warn[0] = true;
-                        }
-                    }
-
-                    if (value < 0) {
-                        maxBlurValue.setText(String.valueOf(0));
-                        maxBlur.setValue(0);
-                    }
-                    else if (value > 150) {
-                        maxBlurValue.setText(String.valueOf(150));
-                        maxBlur.setValue(150);
-                    }
-                    else maxBlur.setValue(value);
-
-                    prefs.edit().putFloat("max_window_blur_radius", value).apply();
-                }
-            }
-        });
         selector.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

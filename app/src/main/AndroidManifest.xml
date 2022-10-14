@@ -9,13 +9,13 @@
             android:value="true" />
         <meta-data
             android:name="xposeddescription"
-            android:value="Makes Notification Shade use blur like in Android 11" />
+            android:value="Makes Notification Shade scrims transparent like in Android 11" />
         <meta-data
             android:name="xposedminversion"
             android:value="53" />
         <meta-data
             android:name="xposedscope"
-            android:resource="@array/xposedscope" />
+            android:value="com.android.systemui" />
     </application>
 
 </manifest>

@@ -3,6 +3,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('C:\\Users\\2007a\\OneDrive\\Рабочий стол\\lsposed.jks')
+            storePassword 'LSPosed'
+            keyAlias 'LSPosed'
+            keyPassword 'LSPosed'
+        }
+    }
     compileSdk 31
 
     defaultConfig {
@@ -10,7 +18,7 @@ android {
         minSdk 31
         targetSdk 31
         versionCode 2
-        versionName "1.1N"
+        versionName "1.2N"
 
         //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -19,6 +27,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
