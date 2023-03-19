@@ -3,23 +3,16 @@ plugins {
 }
 
 android {
-    signingConfigs {
-        release {
-            storeFile file('C:\\Users\\2007a\\OneDrive\\Рабочий стол\\lsposed.jks')
-            storePassword 'LSPosed'
-            keyAlias 'LSPosed'
-            keyPassword 'LSPosed'
-        }
-    }
     compileSdk 31
 
     defaultConfig {
         applicationId "com.asyjaiz.A12blur"
         minSdk 31
         targetSdk 31
-        versionCode 2
-        versionName "1.2N"
+        versionCode 4
+        versionName "1.31N"
 
+        archivesBaseName = "NST"
         //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -27,13 +20,13 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    namespace 'com.asyjaiz.A12blur'
 }
 
 dependencies {
