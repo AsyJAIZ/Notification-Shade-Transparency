@@ -9,17 +9,17 @@ android {
         applicationId "com.asyjaiz.A12blur"
         minSdk 31
         targetSdk 31
-        versionCode 4
-        versionName "1.31N"
+        versionCode 5
+        versionName "1.4N"
 
         archivesBaseName = "NST"
-        //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
