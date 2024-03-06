@@ -181,7 +181,8 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
     }
 
     private Constructor<?> findConstructor(Class<?> hookClass) throws Throwable {
-        return findConstructor(false, hookClass);
+        Constructor<?>[] constructors = hookClass.getConstructors();
+        return constructors.length == 1 ? constructors[0] : findConstructor(false, hookClass);
     }
 
     @Override
