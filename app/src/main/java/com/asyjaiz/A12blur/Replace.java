@@ -1,10 +1,8 @@
 package com.asyjaiz.A12blur;
 
-import static de.robv.android.xposed.XposedHelpers.findConstructorExact;
 import static de.robv.android.xposed.XposedHelpers.setFloatField;
 
 import android.content.res.XModuleResources;
-import android.os.Build;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -58,131 +56,13 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         }
     }
 
-    /* public static Boolean lowPower() {
-        Process process = null;
-        BufferedReader bufferedReader = null;
-
-        try {
-            process = new ProcessBuilder().command("/system/bin/settings", "get global low_power").start();
-            bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line = bufferedReader.readLine();
-            XposedBridge.log("Power Saving Mode check returned " + line);
-            return line.contains("true") || line.contains("1");
-        } catch (Exception e) {
-            XposedBridge.log("Power Saving Mode check returned an exception. Returning fail by default");
-            return false;
-        } finally {
-            if (bufferedReader != null){
-                try {
-                    bufferedReader.close();
-                } catch (IOException ignored) {}
-            }
-            if (process != null){
-                process.destroy();
-            }
-        }
-    } */
-
-    /* public static float alpha(boolean capable) {
-        float defaultA = 0.85f;
-        float supportedA = 0.54f;
-        if (capable) {
-            if (false)
-                return defaultA;
-            else return supportedA;
-        } else return defaultA;
-    } */
-
-    private Constructor<?> findConstructor(boolean forceOld13Constructor, Class<?> hookClass) throws Throwable {
-        Object[] parameterTypesAndCallback = new Object[0];
-        if (Build.VERSION.SDK_INT >= 33) {
-            if (Build.TIME > 1678278441000L && !forceOld13Constructor) {
-                if (BuildConfig.DEBUG) {
-                    XposedBridge.log("Your device is using a build of the new type.");
-                }
-                parameterTypesAndCallback = new Object [] {
-                        rootPackage + ".statusbar.phone.LightBarController",
-                        rootPackage + ".statusbar.phone.DozeParameters",
-                        "android.app.AlarmManager",
-                        rootPackage + ".statusbar.policy.KeyguardStateController",
-                        rootPackage + ".util.wakelock.DelayedWakeLock.Builder",
-                        "android.os.Handler",
-                        "com.android.keyguard.KeyguardUpdateMonitor",
-                        rootPackage + ".dock.DockManager",
-                        rootPackage + ".statusbar.policy.ConfigurationController",
-                        "java.util.concurrent.Executor",
-                        rootPackage + ".statusbar.phone.ScreenOffAnimationController",
-                        rootPackage + ".keyguard.KeyguardUnlockAnimationController",
-                        rootPackage + ".statusbar.phone.StatusBarKeyguardViewManager",
-                        rootPackage + ".keyguard.ui.viewmodel.PrimaryBouncerToGoneTransitionViewModel",
-                        rootPackage + ".keyguard.domain.interactor.KeyguardTransitionInteractor",
-                        "kotlinx.coroutines.CoroutineDispatcher",
-                        rootPackage + ".shade.transition.LargeScreenShadeInterpolator",
-                        rootPackage + ".flags.FeatureFlags"
-                };
-                try {
-                    return findConstructorExact(hookClass, parameterTypesAndCallback);
-                } catch (Throwable t) {
-                    if (BuildConfig.DEBUG) {
-                        XposedBridge.log("Problem with finding corresponding constructor, retrying with an old scheme");
-                    }
-                    return findConstructor(true, hookClass);
-                }
-            } else {
-                parameterTypesAndCallback = new Object [] {
-                        rootPackage + ".statusbar.phone.LightBarController",
-                        rootPackage + ".statusbar.phone.DozeParameters",
-                        "android.app.AlarmManager",
-                        rootPackage + ".statusbar.policy.KeyguardStateController",
-                        rootPackage + ".util.wakelock.DelayedWakeLock.Builder",
-                        "android.os.Handler",
-                        "com.android.keyguard.KeyguardUpdateMonitor",
-                        rootPackage + ".dock.DockManager",
-                        rootPackage + ".statusbar.policy.ConfigurationController",
-                        "java.util.concurrent.Executor",
-                        rootPackage + ".statusbar.phone.ScreenOffAnimationController",
-                        rootPackage + ".keyguard.KeyguardUnlockAnimationController",
-                        rootPackage + ".statusbar.phone.StatusBarKeyguardViewManager",
-                };
-            }
-        }
-        else if (Build.VERSION.SDK_INT == 32) {
-            parameterTypesAndCallback = new Object [] {
-                rootPackage + ".statusbar.phone.LightBarController",
-                rootPackage + ".statusbar.phone.DozeParameters",
-                "android.app.AlarmManager",
-                rootPackage + ".statusbar.policy.KeyguardStateController",
-                rootPackage + ".util.wakelock.DelayedWakeLock.Builder",
-                "android.os.Handler",
-                "com.android.keyguard.KeyguardUpdateMonitor",
-                rootPackage + ".dock.DockManager",
-                rootPackage + ".statusbar.policy.ConfigurationController",
-                "java.util.concurrent.Executor",
-                rootPackage + ".statusbar.phone.UnlockedScreenOffAnimationController",
-                rootPackage + ".statusbar.phone.panelstate.PanelExpansionStateManager"
-            };
-        }
-        else if (Build.VERSION.SDK_INT == 31) {
-            parameterTypesAndCallback = new Object [] {
-                rootPackage + ".statusbar.phone.LightBarController",
-                rootPackage + ".statusbar.phone.DozeParameters",
-                "android.app.AlarmManager",
-                rootPackage + ".statusbar.policy.KeyguardStateController",
-                rootPackage + ".util.wakelock.DelayedWakeLock.Builder",
-                "android.os.Handler",
-                "com.android.keyguard.KeyguardUpdateMonitor",
-                rootPackage + ".dock.DockManager",
-                rootPackage + ".statusbar.policy.ConfigurationController",
-                "java.util.concurrent.Executor",
-                rootPackage + ".statusbar.phone.UnlockedScreenOffAnimationController"
-            };
-        }
-        return findConstructorExact(hookClass, parameterTypesAndCallback);
-    }
-
     private Constructor<?> findConstructor(Class<?> hookClass) throws Throwable {
         Constructor<?>[] constructors = hookClass.getConstructors();
-        return constructors.length == 1 ? constructors[0] : findConstructor(false, hookClass);
+        if (constructors.length >= 1) {
+            return constructors[0];
+        } else {
+            throw new NoSuchMethodException("Did not find constructor for " + hookClass.getName());
+        }
     }
 
     @Override
@@ -205,7 +85,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         avoidAccel2 = read("ro.config.avoid_gfx_accel");
         lowRam = read("ro.config.low_ram");
         disableBlur = read("persist.sysui.disableBlur");
-        boolean capable = supportsBlur && !avoidAccel1 && !avoidAccel2 && !lowRam && !disableBlur;
+        boolean capable = supportsBlur && !avoidAccel1 && !avoidAccel2 && !lowRam && !disableBlur; // yes, sadly we can't just call BlurUtils check for this, so we should do this on our own
         if (BuildConfig.DEBUG) XposedBridge.log(capable ?
                 "Your device is capable of handling blur. Using a corresponding alpha value" :
                 "Your device is not capable of handling blur. Using a default alpha value");
@@ -215,7 +95,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         XC_MethodHook xcMethodHook = new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                setFloatField(param.thisObject, "mDefaultScrimAlpha", alpha);
+                setFloatField(param.thisObject, "mDefaultScrimAlpha", alpha); // Override BUSY_SCRIM_ALPHA
             }
         };
 
