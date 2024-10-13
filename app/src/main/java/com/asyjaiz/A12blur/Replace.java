@@ -1,5 +1,6 @@
 package com.asyjaiz.A12blur;
 
+import static de.robv.android.xposed.XposedHelpers.callMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.findMethodBestMatch;
 import static de.robv.android.xposed.XposedHelpers.setFloatField;
@@ -24,7 +25,6 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageResources {
 
     String rootPackage = "com.android.systemui";
-    private String rootPackagePath;
 
     boolean supportsBlur;
     boolean avoidAccel1;
@@ -71,7 +71,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
 
     @Override
     public void handleInitPackageResources(XC_InitPackageResources.InitPackageResourcesParam resParam) throws Throwable {
-        XModuleResources modRes = XModuleResources.createInstance(rootPackagePath, null);
+        XModuleResources modRes = XModuleResources.createInstance(resParam.packageName, null);
         avoidAccel1 = modRes.getBoolean(modRes.getIdentifier("config_avoidGfxAccel", "bool", "android"));
     }
 
@@ -82,8 +82,6 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         if (BuildConfig.DEBUG) {
             XposedBridge.log("Debug and diagnostics.");
         }
-
-        rootPackagePath = lpParam.appInfo.sourceDir;
 
         XSharedPreferences prefs = new XSharedPreferences(BuildConfig.APPLICATION_ID, "set");
         if (BuildConfig.DEBUG)
@@ -105,7 +103,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         }
 
         String base = ".statusbar.phone.";
-        final Class<?> ScrimController = XposedHelpers.findClass(rootPackage + base + "ScrimController", lpParam.classLoader);
+        final Class<?> ScrimController = findClass(rootPackage + base + "ScrimController", lpParam.classLoader);
         XC_MethodHook xcMethodHook = new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
@@ -120,22 +118,47 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         final Class<?> ScrimState = findClass(rootPackage + base + "ScrimState", lpParam.classLoader);
         final Class<?> ScrimView = findClass(rootPackage + ".scrim.ScrimView", lpParam.classLoader);
         Method updateScrimColor;
-        XC_MethodHook hook;
+        String name = "updateScrimColor";
+        boolean stripped;
         try {
-            updateScrimColor = findMethodBestMatch(ScrimState, "updateScrimColor", ScrimView, float.class, int.class);
-            hook = new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    if (!XposedHelpers.findField(ScrimState, "mScrimBehind").get(param.thisObject).equals(param.args[0]))
-                        return;
-
-                    if ((Float) param.args[1] == 1f)
-                        param.args[1] = prefs.getFloat("behind_alpha", 1f);
-                }
-            };
+            updateScrimColor = findMethodBestMatch(ScrimState, name, ScrimView, float.class, int.class);
+            stripped = false;
         } catch (NoSuchMethodError exception) {
-
+            try {
+                updateScrimColor = findMethodBestMatch(ScrimState, name, ScrimView);
+            } catch (NoSuchMethodError exception2) {
+                updateScrimColor = findMethodBestMatch(ScrimState, name, ScrimView, int.class);
+            }
+            stripped = true;
         }
+
+        final boolean finalStripped = stripped;
+        float alpha = prefs.getFloat("behind_alpha", 1f);
+        XC_MethodHook hook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                if (BuildConfig.DEBUG) XposedBridge.log("beforeHook");
+                Object mScrimBehind = XposedHelpers.findField(ScrimState, "mScrimBehind").get(param.thisObject);
+                if (!mScrimBehind.equals(param.args[0]))
+                    return;
+
+                if (!finalStripped)
+                    if ((Float) param.args[1] == 1f)
+                        param.args[1] = alpha;
+            }
+
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                super.afterHookedMethod(param);
+                if (BuildConfig.DEBUG) XposedBridge.log("afterHook");
+
+                Object mScrimBehind = XposedHelpers.findField(ScrimState, "mScrimBehind").get(param.thisObject);
+
+                if (finalStripped) {
+                    callMethod(mScrimBehind, "setViewAlpha", alpha);
+                }
+            }
+        };
         XposedBridge.hookMethod(updateScrimColor, hook);
     }
 }
