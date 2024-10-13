@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/behind" android:id="@+id/behindScrim"/>
+    <item android:drawable="@drawable/btn" android:width="87.5dp" android:height="30dp"
+        android:top="10dp" android:start="10dp" />
+    <item android:drawable="@drawable/btn" android:width="87.5dp" android:height="30dp"
+        android:top="10dp" android:end="10dp" android:gravity="end"/>
+    <item android:drawable="@drawable/notif_scr" android:top="50dp" android:id="@+id/notificationScrim"/>
+</layer-list>

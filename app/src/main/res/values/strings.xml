@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Notification Shade Transparency</string>
+    <string name="settings">Shade Settings</string>
+    <string name="auto">Auto</string>
 </resources>
