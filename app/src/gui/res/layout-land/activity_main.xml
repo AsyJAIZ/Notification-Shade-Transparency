@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            style="?attr/collapsingToolbarLayoutMediumStyle"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/collapsingToolbarLayoutMediumSize">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:elevation="0dp"
+                app:title="@string/settings" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <ImageView
+        android:id="@+id/shade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/settings"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
+        app:srcCompat="@drawable/shade" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/behind"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="@+id/shade"
+        app:layout_constraintStart_toStartOf="@+id/shade"
+        app:layout_constraintTop_toTopOf="@+id/shade"
+        android:valueFrom="0.0"
+        android:valueTo="1.0"
+        android:value="1.0"
+        app:labelBehavior="floating"
+        app:thumbHeight="32dp"
+        android:tag="behind_alpha">
+
+    </com.google.android.material.slider.Slider>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/notif"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toBottomOf="@+id/shade"
+        app:layout_constraintEnd_toEndOf="@+id/shade"
+        app:layout_constraintStart_toStartOf="@+id/shade"
+        app:layout_constraintTop_toBottomOf="@+id/behind"
+        android:valueFrom="0.0"
+        android:valueTo="1.0"
+        android:value="1.0"
+        android:tag="notif_alpha"/>
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/auto"
+        android:layout_width="225dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:checked="true"
+        android:layoutDirection="rtl"
+        android:text="@string/auto"
+        app:layout_constraintStart_toEndOf="@+id/shade"
+        app:layout_constraintTop_toTopOf="@+id/shade" />
+
+    <TextView
+        android:id="@+id/problem"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:gravity="center_horizontal"
+        android:text="@string/problem"
+        android:textSize="20sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/shade"
+        app:layout_constraintTop_toBottomOf="@+id/auto" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

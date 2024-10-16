@@ -4,7 +4,9 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +30,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        SharedPreferences prefs = getSharedPreferences("set", MODE_WORLD_READABLE);
-
         ImageView shade = findViewById(R.id.shade);
         LayerDrawable drawable = (LayerDrawable) shade.getDrawable();
         GradientDrawable behindScr = (GradientDrawable) drawable.findDrawableByLayerId(R.id.behindScrim);
@@ -38,6 +38,20 @@ public class MainActivity extends AppCompatActivity {
         Slider behindAlpha = findViewById(R.id.behind);
         Slider notifAlpha = findViewById(R.id.notif);
         MaterialSwitch auto = findViewById(R.id.auto);
+        TextView probs = findViewById(R.id.problem);
+
+        try {
+            getPreferences(MODE_WORLD_READABLE);
+        } catch (SecurityException e) {
+            probs.setVisibility(View.VISIBLE);
+            behindAlpha.setActivated(false);
+            notifAlpha.setActivated(false);
+            auto.setActivated(false);
+            return;
+        }
+
+        SharedPreferences prefs = getSharedPreferences("set", MODE_WORLD_READABLE);
+
         behindAlpha.setValue(prefs.getFloat(behindAlpha.getTag().toString(), 1f));
         notifAlpha.setValue(prefs.getFloat(notifAlpha.getTag().toString(), 1f));
         auto.setChecked(prefs.getBoolean("auto", true));

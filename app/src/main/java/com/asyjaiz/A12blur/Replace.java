@@ -2,12 +2,9 @@ package com.asyjaiz.A12blur;
 
 import static de.robv.android.xposed.XposedBridge.hookMethod;
 import static de.robv.android.xposed.XposedBridge.log;
-import static de.robv.android.xposed.XposedHelpers.callMethod;
-import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.findField;
 import static de.robv.android.xposed.XposedHelpers.findMethodBestMatch;
-import static de.robv.android.xposed.XposedHelpers.getFloatField;
 import static de.robv.android.xposed.XposedHelpers.setFloatField;
 
 import android.content.res.XModuleResources;
@@ -18,14 +15,11 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -93,12 +87,13 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
 
 
         XSharedPreferences prefs = new XSharedPreferences(BuildConfig.APPLICATION_ID, "set");
+        boolean readable = BuildConfig.FLAVOR.equals("gui") && prefs.getFile().canRead();
         if (BuildConfig.DEBUG)
-            log("Can read preferences? " + prefs.getFile().canRead());
+            log("Can read preferences? " + readable);
 
         float notifAlpha;
         boolean auto = prefs.getBoolean("auto", true);
-        if (auto) {
+        if (!readable || auto) {
             supportsBlur = read("ro.surface_flinger.supports_background_blur");
             avoidAccel2 = read("ro.config.avoid_gfx_accel");
             lowRam = read("ro.config.low_ram");
@@ -137,7 +132,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         if (BuildConfig.DEBUG) log("Trying to hook a ScrimController constructor.");
         hookMethod(findConstructor(ScrimController), xcMethodHook);
 
-        if (auto) return;
+        if (!readable || auto) return; // Yes, exactly. You see here locked out functionality.
         float alpha = prefs.getFloat("behind_alpha", 1f);
         quickCheck(alpha);
         /*if (BuildConfig.DEBUG) log("Hooking ScrimState");
@@ -210,6 +205,7 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
                 Field mBehindAlpha = findField(ScrimController, "mBehindAlpha");
                 if (mBehindAlpha.getFloat(param.thisObject) == 1f) {
                     mBehindAlpha.setFloat(param.thisObject, alpha);
+                    // TODO: Tint
                 }
             }
         });

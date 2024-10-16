@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Shade Settings</string>
+    <string name="auto">Auto</string>
+    <string name="problem">"It looks like the module was not instantiated properly.\nTry manually ticking SystemUI in LSPosed and reboot.\nIf it still doesn't work, there may be a problem with LSPosed.\nLimited functionality available"</string>
+</resources>
