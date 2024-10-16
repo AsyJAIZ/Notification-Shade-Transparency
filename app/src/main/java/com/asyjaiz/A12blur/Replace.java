@@ -1,8 +1,13 @@
 package com.asyjaiz.A12blur;
 
+import static de.robv.android.xposed.XposedBridge.hookMethod;
+import static de.robv.android.xposed.XposedBridge.log;
 import static de.robv.android.xposed.XposedHelpers.callMethod;
+import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
+import static de.robv.android.xposed.XposedHelpers.findField;
 import static de.robv.android.xposed.XposedHelpers.findMethodBestMatch;
+import static de.robv.android.xposed.XposedHelpers.getFloatField;
 import static de.robv.android.xposed.XposedHelpers.setFloatField;
 
 import android.content.res.XModuleResources;
@@ -11,7 +16,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -40,13 +47,9 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
             process = new ProcessBuilder().command("/system/bin/getprop", propName).start();
             bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line = bufferedReader.readLine();
-            boolean contains = line.contains("true") || line.contains("1");
-            if (BuildConfig.DEBUG) XposedBridge.log("Check for " + propName + " returned " +
-                    line +
-                    (contains ? " and contains a success value" : " and doesn't contain a success value"));
-            return contains;
+            return line.contains("true") || line.contains("1");
         } catch (Exception e) {
-            XposedBridge.log("Something went wrong: " + e + "\nMake a new issue on a Github page.");
+            log("Something went wrong: " + e + "\nMake a new issue on a Github page.");
             return false;
         } finally {
             if (bufferedReader != null){
@@ -75,31 +78,51 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         avoidAccel1 = modRes.getBoolean(modRes.getIdentifier("config_avoidGfxAccel", "bool", "android"));
     }
 
+    static float GAR = 0.54f;
+    public static void quickCheck(float value) {
+        if (GAR > value) log("You may want to set value " + value + "to " + GAR + "or higher for better text visibility");
+    }
+
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpParam) throws Throwable {
         if (!lpParam.packageName.equals(rootPackage))
             return;
 
         if (BuildConfig.DEBUG) {
-            XposedBridge.log("Debug and diagnostics.");
+            log("Debug and diagnostics.");
         }
+
 
         XSharedPreferences prefs = new XSharedPreferences(BuildConfig.APPLICATION_ID, "set");
         if (BuildConfig.DEBUG)
-            XposedBridge.log("Can read preferences? " + prefs.getFile().canRead());
+            log("Can read preferences? " + prefs.getFile().canRead());
 
         float notifAlpha;
-        if (prefs.getBoolean("auto", true)) {
+        boolean auto = prefs.getBoolean("auto", true);
+        if (auto) {
             supportsBlur = read("ro.surface_flinger.supports_background_blur");
             avoidAccel2 = read("ro.config.avoid_gfx_accel");
             lowRam = read("ro.config.low_ram");
             disableBlur = read("persist.sysui.disableBlur");
             boolean capable = supportsBlur && !avoidAccel1 && !avoidAccel2 && !lowRam && !disableBlur; // yes, sadly we can't just call BlurUtils check for this, so we should do this on our own
-            if (BuildConfig.DEBUG) XposedBridge.log(capable ?
+            if (BuildConfig.DEBUG) log(capable ?
                     "Your device is capable of handling blur. Using a corresponding alpha value" :
                     "Your device is not capable of handling blur. Using a default alpha value");
-            notifAlpha = capable ? 0.54f : 0.85f;
+            if (!capable && BuildConfig.DEBUG) {
+                StringBuilder builder = new StringBuilder("Possible culprits:\n");
+                if (!supportsBlur)
+                    builder.append("    Your SurfaceFlinger may have blur disabled\n");
+                if (avoidAccel1 || avoidAccel2)
+                    builder.append("    System avoids graphical acceleration\n");
+                if (lowRam)
+                    builder.append("    Device reports to be a low ram device\n");
+                if (disableBlur)
+                    builder.append("    Blur is disabled in SystemUI by a property");
+                log(builder.toString());
+            }
+            notifAlpha = capable ? GAR : 0.85f;
         } else {
             notifAlpha = prefs.getFloat("notif_alpha", 1.0f);
+            quickCheck(notifAlpha);
         }
 
         String base = ".statusbar.phone.";
@@ -111,10 +134,13 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
             }
         };
 
-        if (BuildConfig.DEBUG) XposedBridge.log("Trying to hook a ScrimController constructor.");
-        XposedBridge.hookMethod(findConstructor(ScrimController), xcMethodHook);
+        if (BuildConfig.DEBUG) log("Trying to hook a ScrimController constructor.");
+        hookMethod(findConstructor(ScrimController), xcMethodHook);
 
-        if (BuildConfig.DEBUG) XposedBridge.log("Hooking ScrimState");
+        if (auto) return;
+        float alpha = prefs.getFloat("behind_alpha", 1f);
+        quickCheck(alpha);
+        /*if (BuildConfig.DEBUG) log("Hooking ScrimState");
         final Class<?> ScrimState = findClass(rootPackage + base + "ScrimState", lpParam.classLoader);
         final Class<?> ScrimView = findClass(rootPackage + ".scrim.ScrimView", lpParam.classLoader);
         Method updateScrimColor;
@@ -133,33 +159,60 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         }
 
         final boolean finalStripped = stripped;
-        float alpha = prefs.getFloat("behind_alpha", 1f);
         XC_MethodHook hook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                if (BuildConfig.DEBUG) XposedBridge.log("beforeHook");
-                Object mScrimBehind = XposedHelpers.findField(ScrimState, "mScrimBehind").get(param.thisObject);
+                Object mScrimBehind = findField(ScrimState, "mScrimBehind").get(param.thisObject);
                 if (!mScrimBehind.equals(param.args[0]))
                     return;
 
                 if (!finalStripped)
-                    if ((Float) param.args[1] == 1f)
+                    if ((Float) param.args[1] == 1f) {
                         param.args[1] = alpha;
+                        //log("Alpha is " + param.args[1]);
+                    }
             }
 
             @Override
             protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                 super.afterHookedMethod(param);
-                if (BuildConfig.DEBUG) XposedBridge.log("afterHook");
-
-                Object mScrimBehind = XposedHelpers.findField(ScrimState, "mScrimBehind").get(param.thisObject);
+                Object mScrimBehind = findField(ScrimState, "mScrimBehind").get(param.thisObject);
 
                 if (finalStripped) {
                     callMethod(mScrimBehind, "setViewAlpha", alpha);
+                    //log("Alpha is " + (Float) callMethod(mScrimBehind, "getViewAlpha"));
                 }
             }
         };
-        XposedBridge.hookMethod(updateScrimColor, hook);
+        if (BuildConfig.DEBUG) log("Hooking updateScrimColor");
+        hookMethod(updateScrimColor, hook);*/
+
+        if (BuildConfig.DEBUG) log("Hooking applyState in ScrimController");
+        Method applyState;
+        try {
+            applyState = findMethodBestMatch(ScrimController, "applyState");
+        } catch (NoSuchMethodError e) {
+            try {
+                applyState = findMethodBestMatch(ScrimController, "applyState$1");
+            } catch (NoSuchMethodError ex) {
+                try {
+                    applyState = findMethodBestMatch(ScrimController, "applyState$1$1");
+                } catch (NoSuchMethodError exc) {
+                    log("applyState function was not found. Please open a new GitHub issue and provide next info:\n1. OS version\n2. Error log\n3. SystemUI folder copy");
+                    throw new RuntimeException(exc);
+                }
+            }
+        }
+        hookMethod(applyState, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                super.afterHookedMethod(param);
+                Field mBehindAlpha = findField(ScrimController, "mBehindAlpha");
+                if (mBehindAlpha.getFloat(param.thisObject) == 1f) {
+                    mBehindAlpha.setFloat(param.thisObject, alpha);
+                }
+            }
+        });
     }
 }
 
