@@ -2,12 +2,15 @@ package com.asyjaiz.A12blur;
 
 import static de.robv.android.xposed.XposedBridge.hookMethod;
 import static de.robv.android.xposed.XposedBridge.log;
+import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.findField;
 import static de.robv.android.xposed.XposedHelpers.findMethodBestMatch;
 import static de.robv.android.xposed.XposedHelpers.setFloatField;
 
+import android.content.Context;
 import android.content.res.XModuleResources;
+import android.graphics.Color;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -77,9 +80,24 @@ public class Replace implements IXposedHookLoadPackage, IXposedHookInitPackageRe
         if (GAR > value) log("You may want to set value " + value + "to " + GAR + "or higher for better text visibility");
     }
 
+    static String launcher = "com.android.launcher3";
+    static String quickstep = "com.android.quickstep";
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpParam) throws Throwable {
-        if (!lpParam.packageName.equals(rootPackage))
+        if ((lpParam.packageName.equals(launcher)) ||
+                (lpParam.packageName.equals("com.google.android.apps.nexuslauncher"))) {
+            findAndHookMethod(quickstep + ".fallback.RecentsState", lpParam.classLoader,
+                    "getScrimColor", Context.class, new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                            super.afterHookedMethod(param);
+                            param.setResult((int) Color.BLUE);
+                            log("Modified result successfully");
+                        }
+                    });
+        }
+        else if (!lpParam.packageName.equals(rootPackage)) {
             return;
+        }
 
         if (BuildConfig.DEBUG) {
             log("Debug and diagnostics.");
